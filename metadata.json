@@ -1,0 +1,8 @@
+{
+  "name": "Lumina Magazine",
+  "description": "Toufiq and Trisha's digital Love Canvas gallery that automatically syncs and elegantly frames memories from their Google Drive folder with a cinematic user interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
