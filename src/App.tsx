@@ -758,6 +758,7 @@ export default function App() {
                 >
                    <img 
                     src={selectedPhoto.url} 
+                   referrerPolicy="no-referrer"
                     className="max-h-full max-w-full object-contain shadow-[0_0_100px_rgba(212,175,55,0.2)] rounded-lg" 
                     alt="Selected" 
                    />

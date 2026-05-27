@@ -1,10 +1,12 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import { google } from "googleapis";
 import dotenv from "dotenv";
 import { Readable } from "stream";
+import captionsCache from "./src/captions_cache.json";
 
 dotenv.config();
 
@@ -160,47 +162,69 @@ app.get("/api/photos", async (req, res) => {
 
     // Fallback block if scraping failed but API key is present
     if (process.env.GOOGLE_DRIVE_API_KEY) {
-      const apiResponse = await drive.files.list({
-        q: `'${folderId}' in parents and mimeType contains 'image/' and trashed = false`,
-        fields: "files(id, name, createdTime, webViewLink, thumbnailLink)",
-        key: process.env.GOOGLE_DRIVE_API_KEY
-      });
-      
-      const files = apiResponse.data.files || [];
-      const photos = files.map(file => {
-        const dateObj = file.createdTime ? new Date(file.createdTime) : new Date();
-        let formattedDate = dateObj.toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric"
+      try {
+        const apiResponse = await drive.files.list({
+          q: `'${folderId}' in parents and mimeType contains 'image/' and trashed = false`,
+          fields: "files(id, name, createdTime, webViewLink, thumbnailLink)",
+          key: process.env.GOOGLE_DRIVE_API_KEY
         });
-        if (dateObj.getFullYear() === 2025) {
-          formattedDate = "11 June 2025";
+        
+        const files = apiResponse.data.files || [];
+        if (files.length > 5) {
+          const photos = files.map(file => {
+            const dateObj = file.createdTime ? new Date(file.createdTime) : new Date();
+            let formattedDate = dateObj.toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric"
+            });
+            if (dateObj.getFullYear() === 2025) {
+              formattedDate = "11 June 2025";
+            }
+            return {
+              id: file.id,
+              name: "",
+              url: `https://lh3.googleusercontent.com/d/${file.id}=w1000`,
+              dateStr: dateObj.getFullYear() === 2025 ? "6/11/25" : `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear().toString().slice(-2)}`,
+              formattedDate,
+              createdTime: dateObj.getFullYear() === 2025 ? new Date(2025, 5, 11).getTime() : dateObj.getTime()
+            };
+          });
+          
+          // Sort older to newer
+          photos.sort((a, b) => (a.createdTime || 0) - (b.createdTime || 0));
+          return res.json({ photos });
         }
-        return {
-          id: file.id,
-          name: "",
-          url: `https://lh3.googleusercontent.com/d/${file.id}=w1000`,
-          dateStr: dateObj.getFullYear() === 2025 ? "6/11/25" : `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear().toString().slice(-2)}`,
-          formattedDate,
-          createdTime: dateObj.getFullYear() === 2025 ? new Date(2025, 5, 11).getTime() : dateObj.getTime()
-        };
-      });
-      
-      // Sort older to newer
-      photos.sort((a, b) => (a.createdTime || 0) - (b.createdTime || 0));
-      return res.json({ photos });
+      } catch (err) {
+        console.error("Drive API Error:", err);
+      }
     }
 
-    // If everything failed to find substantial photos, return instructions
-    res.json({ 
-      photos: [], 
-      message: "Configuration Needed: Scraper failed and no GOOGLE_DRIVE_API_KEY is configured.",
-      isDemo: true 
-    });
+    // Ultimate fail-safe: serve all 242 photos using the curated captions cache file
+    const cacheKeys = Object.keys(captionsCache);
+    const photosFallback = cacheKeys.map((id) => ({
+      id,
+      name: "",
+      url: `https://lh3.googleusercontent.com/d/${id}=w1000`,
+      dateStr: "6/11/25",
+      formattedDate: "11 June 2025"
+    }));
+    return res.json({ photos: photosFallback });
   } catch (error: any) {
     console.error("Drive Error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    try {
+      const cacheKeys = Object.keys(captionsCache);
+      const photosFallback = cacheKeys.map((id) => ({
+        id,
+        name: "",
+        url: `https://lh3.googleusercontent.com/d/${id}=w1000`,
+        dateStr: "6/11/25",
+        formattedDate: "11 June 2025"
+      }));
+      return res.json({ photos: photosFallback });
+    } catch (innerError) {
+      res.status(500).json({ error: "Internal Server Error" });
+    }
   }
 });
 

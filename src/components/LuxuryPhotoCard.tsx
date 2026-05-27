@@ -58,6 +58,7 @@ export function LuxuryPhotoCard({
                 src={url} 
                 onLoad={handleImageLoad}
                 onError={() => setHasError(true)}
+                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover sepia-[0.3] brightness-90 group-hover:sepia-0 group-hover:brightness-100 transition-all duration-1000" 
                 alt={caption} 
               />
@@ -77,10 +78,11 @@ export function LuxuryPhotoCard({
             src={url} 
             onLoad={handleImageLoad}
             onError={() => setHasError(true)}
+            referrerPolicy="no-referrer"
             className="w-full h-full object-cover transition-all object-center group-hover:brightness-110" 
             alt={caption} 
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-60 group-hover:opacity-90 transition-all duration-700 flex flex-col justify-end p-10 translate-y-4 group-hover:translate-y-0 hidden md:flex">
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-60 group-hover:opacity-90 transition-all duration-700 flex flex-col justify-end p-10 translate-y-4 group-hover:translate-y-0 hidden md:flex">
             <p className="text-[10px] tracking-[0.4em] font-bold text-luxury-gold uppercase mb-2">Moments of Grace</p>
             <h3 className="font-serif italic text-3xl text-white mb-4 leading-tight">{caption}</h3>
             <div className="w-8 h-[1px] bg-luxury-gold group-hover:w-24 transition-all duration-700" />
@@ -103,6 +105,7 @@ export function LuxuryPhotoCard({
                   src={url} 
                   onLoad={handleImageLoad}
                   onError={() => setHasError(true)}
+                  referrerPolicy="no-referrer"
                   className={cn("w-full object-cover", isLandscape ? "aspect-video" : "aspect-[4/5]")} 
                   alt={caption} 
                 />
