@@ -20,6 +20,17 @@ import { LuxuryPhotoCard } from "./components/LuxuryPhotoCard";
 import captionsCache from "./captions_cache.json";
 import gsap from "gsap";
 
+const STATIC_PHOTOS = Object.entries(captionsCache).map(([id, info]: [string, any]) => ({
+  id,
+  name: "",
+  url: `https://lh3.googleusercontent.com/d/${id}=w1000`,
+  dateStr: "6/11/25",
+  formattedDate: "11 June 2025",
+  caption: info.caption,
+  type: info.type,
+  poem: info.poem || "In silent thoughts, the world aligns,\nListening to the quiet call.\nEach subtle pose, a work of art,\nAnd wrapped in hope's eternal rays."
+}));
+
 const particles = Array.from({ length: 48 }).map((_, i) => {
   const angle = (i / 48) * Math.PI * 2;
   const distance = 80 + Math.random() * 45;
@@ -34,7 +45,7 @@ const particles = Array.from({ length: 48 }).map((_, i) => {
 
 export default function App() {
   useSmoothScroll();
-  const [photos, setPhotos] = useState<any[]>([]);
+  const [photos, setPhotos] = useState<any[]>(STATIC_PHOTOS);
   const [isLoading, setIsLoading] = useState(true);
   const [loadPhase, setLoadPhase] = useState<"LOVE_BUILD" | "CURTAIN_SPLIT" | "PHOTO_FLASH" | "WELCOME" | "COMPLETED">("LOVE_BUILD");
   const [flashIndex, setFlashIndex] = useState(0);
@@ -64,14 +75,17 @@ export default function App() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // Fetch photos
+  // Fetch photos with graceful fallback to client-side STATIC_PHOTOS on static CDNs like Netlify
   useEffect(() => {
     async function fetchPhotos() {
       try {
         const response = await fetch("/api/photos");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         
-        if (data.photos && data.photos.length > 0) {
+        if (data && data.photos && data.photos.length > 0) {
           const poeticCaptions = [
             "Ethereal Whispers", "A Symphony of Souls", "Golden Hour Grace", 
             "Infinite Devotion", "Midnight Muse", "Crimson Sentiment",
@@ -86,21 +100,9 @@ export default function App() {
               poem: cacheItem ? cacheItem.poem : "In silent thoughts, the world aligns,\nListening to the quiet call.\nEach subtle pose, a work of art,\nAnd wrapped in hope's eternal rays."
             };
           }));
-        } else {
-          // Fallback static high end selection
-          setPhotos(Array.from({ length: 48 }).map((_, i) => ({
-            id: `p-${i}`,
-            url: `https://images.unsplash.com/photo-${[
-              "1511285560929-80b456fea0bc",
-              "1529626455594-4ff0802cfb7e",
-              "1519741497674-611481863552",
-              "1534528741775-53994a69daeb"
-            ][i % 4]}?auto=format&fit=crop&q=90&w=800`,
-            caption: "Eternal Embrace"
-          })));
         }
       } catch (err) {
-        console.error("Fetch error", err);
+        console.warn("API photo fetch ignored. Running in standalone static client mode with pre-populated gallery list. Details:", err);
       }
     }
     fetchPhotos();
@@ -572,7 +574,7 @@ export default function App() {
         <div className="w-full">
            <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-24 max-w-7xl mx-auto">
               <div className="max-w-md">
-                 <h2 className="font-serif text-5xl italic mb-6">Fragments of Pure Light</h2>
+                 <h2 className="font-serif text-4xl md:text-5xl italic mb-6">Fragments of Pure Light</h2>
                  <p className="text-stone-500 font-light leading-relaxed">
                    In the luxury of stillness, we find the most profound stories. Each frame is a love letter to the moments that define our existence. Curated with intentional grace.
                  </p>
@@ -642,7 +644,7 @@ export default function App() {
         <div className="max-w-4xl mx-auto space-y-16">
            <div className="text-center space-y-4">
               <span className="text-[10px] tracking-[0.4em] font-bold text-luxury-gold uppercase">The Origin Story</span>
-              <h2 className="font-serif text-6xl italic leading-none">A Journey of Two Souls</h2>
+              <h2 className="font-serif text-4xl md:text-6xl italic leading-none">A Journey of Two Souls</h2>
            </div>
 
            <div className="space-y-12 text-stone-300 font-light text-xl leading-relaxed font-serif">
@@ -792,11 +794,12 @@ export default function App() {
                         <Heart className="w-4 h-4 fill-current" /> Save
                       </button>
                       <a 
-                        href={`/api/download-image/${selectedPhoto.id}`}
-                        download
+                        href={`https://lh3.googleusercontent.com/d/${selectedPhoto.id}=w2000`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center gap-2 px-8 py-4 bg-luxury-gold text-luxury-black rounded-full text-[10px] font-bold tracking-widest uppercase hover:bg-white hover:text-black transition-all active:scale-95 shadow-lg shadow-luxury-gold/25"
                       >
-                        <Download className="w-4 h-4" /> Download Original
+                        <Download className="w-4 h-4" /> Download Original (HD)
                       </a>
                    </div>
                 </motion.div>

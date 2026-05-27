@@ -66,7 +66,7 @@ export function LuxuryPhotoCard({
                  <Heart className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
            </div>
-           <p className="font-cursive text-stone-800 text-3xl text-center leading-none tracking-tight hidden md:block">{caption}</p>
+           <p className="font-cursive text-stone-800 text-2xl md:text-3xl mt-2 text-center leading-none tracking-tight">{caption}</p>
         </div>
       )}
 
@@ -82,9 +82,9 @@ export function LuxuryPhotoCard({
             className="w-full h-full object-cover transition-all object-center group-hover:brightness-110" 
             alt={caption} 
           />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-60 group-hover:opacity-90 transition-all duration-700 flex flex-col justify-end p-10 translate-y-4 group-hover:translate-y-0 hidden md:flex">
-            <p className="text-[10px] tracking-[0.4em] font-bold text-luxury-gold uppercase mb-2">Moments of Grace</p>
-            <h3 className="font-serif italic text-3xl text-white mb-4 leading-tight">{caption}</h3>
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-80 md:opacity-60 md:group-hover:opacity-90 transition-all duration-700 flex flex-col justify-end p-5 md:p-10 md:translate-y-4 md:group-hover:translate-y-0">
+            <p className="text-[9px] md:text-[10px] tracking-[0.4em] font-bold text-luxury-gold uppercase mb-2">Moments of Grace</p>
+            <h3 className="font-serif italic text-2xl md:text-3xl text-white mb-2 md:mb-4 leading-tight">{caption}</h3>
             <div className="w-8 h-[1px] bg-luxury-gold group-hover:w-24 transition-all duration-700" />
           </div>
         </div>
