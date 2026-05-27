@@ -66,7 +66,6 @@ export function LuxuryPhotoCard({
                  <Heart className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
            </div>
-           <p className="font-cursive text-stone-800 text-2xl md:text-3xl mt-2 text-center leading-none tracking-tight">{caption}</p>
         </div>
       )}
 
@@ -82,11 +81,6 @@ export function LuxuryPhotoCard({
             className="w-full h-full object-cover transition-all object-center group-hover:brightness-110" 
             alt={caption} 
           />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-80 md:opacity-60 md:group-hover:opacity-90 transition-all duration-700 flex flex-col justify-end p-5 md:p-10 md:translate-y-4 md:group-hover:translate-y-0">
-            <p className="text-[9px] md:text-[10px] tracking-[0.4em] font-bold text-luxury-gold uppercase mb-2">Moments of Grace</p>
-            <h3 className="font-serif italic text-2xl md:text-3xl text-white mb-2 md:mb-4 leading-tight">{caption}</h3>
-            <div className="w-8 h-[1px] bg-luxury-gold group-hover:w-24 transition-all duration-700" />
-          </div>
         </div>
       )}
 
@@ -110,11 +104,6 @@ export function LuxuryPhotoCard({
                   alt={caption} 
                 />
                 <div className="absolute inset-0 border-[20px] border-white/5 mix-blend-overlay" />
-              </div>
-              
-              <div className="absolute -bottom-10 -right-4 z-20 glass p-6 max-w-[240px] opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-10 group-hover:translate-y-0 shadow-2xl hidden md:block">
-                 <p className="font-serif text-[11px] uppercase tracking-[0.3em] text-luxury-gold font-bold mb-2">Editorial Memo</p>
-                 <p className="text-sm leading-relaxed italic text-stone-200">{caption}</p>
               </div>
            </motion.div>
            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-luxury-gold/5 blur-[100px] rounded-full mix-blend-screen pointer-events-none" />

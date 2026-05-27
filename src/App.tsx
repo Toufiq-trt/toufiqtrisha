@@ -925,11 +925,6 @@ export default function App() {
                    <p className="text-[11px] tracking-[0.5em] text-luxury-gold uppercase font-bold">The Sentiment</p>
                    <h2 className="font-serif text-5xl lg:text-7xl italic leading-none">{selectedPhoto.caption}</h2>
                    <div className="w-20 h-1 bg-luxury-gold mx-auto lg:mx-0" />
-                   {selectedPhoto.formattedDate && (
-                     <div className="text-[11px] font-mono tracking-[0.2em] text-luxury-gold/95 uppercase">
-                        Captured &bull; {selectedPhoto.formattedDate}
-                     </div>
-                   )}
                    {selectedPhoto.poem && (
                      <div className="space-y-2 py-4 border-t border-b border-white/5 my-6">
                        {selectedPhoto.poem.split("\n").map((line: string, idx: number) => (
