@@ -58,6 +58,7 @@ export default function App() {
   const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null);
   const [isVideoPlayed, setIsVideoPlayed] = useState(false);
   const [isAtVideoOrPast, setIsAtVideoOrPast] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isStoryOpen, setIsStoryOpen] = useState(false);
   const [hasStoryBeenShown, setHasStoryBeenShown] = useState(false);
@@ -203,6 +204,18 @@ export default function App() {
     window.addEventListener("scroll", handleScrollDetection, { passive: true });
     return () => window.removeEventListener("scroll", handleScrollDetection);
   }, [loadPhase]);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(
+        window.innerWidth < 768 || 
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      );
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const handleArrowNavigation = () => {
     if (isAtVideoOrPast) {
@@ -706,37 +719,21 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-col items-center">
            <div className="text-center max-w-xl mb-16 space-y-4">
               <span className="text-[10px] tracking-[0.5em] font-bold text-luxury-gold uppercase flex items-center justify-center gap-2">
-                <Sparkles className="w-4 h-4" /> Editorial Presentation
+                <Sparkles className="w-4 h-4" /> Toufiq's Presents
               </span>
-              <h2 className="font-serif text-5xl md:text-6xl italic">The Cinematic Film</h2>
-              <p className="text-stone-500 font-light text-sm leading-relaxed">
-                An archival motion capture of our journey. Hand-edited, seamlessly playing like netflix, with intuitive sound control and continuous play.
-              </p>
-           </div>
-
-           {/* Mobile Direct Entry Button */}
-           <div className="flex md:hidden w-full max-w-5xl justify-center mb-8 px-4">
-              <a
-                href="https://drive.google.com/file/d/1ZExmJpxgtOL41uDdQ3dS1VfSij-IyzH1/view?usp=drivesdk"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setIsVideoPlayed(true)}
-                className="w-full flex items-center justify-center gap-2.5 px-6 py-4 bg-luxury-gold text-luxury-black rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-white hover:text-black transition-all active:scale-95 shadow-lg shadow-luxury-gold/20"
-              >
-                 <Play className="w-3.5 h-3.5 fill-current animate-pulse" /> Stream Cinematic Film (Mobile Optimized)
-              </a>
+              <h2 className="font-serif text-4xl md:text-6xl italic text-white leading-tight">Experience the Trailer of Our Togetherness</h2>
            </div>
 
            {/* Widescreen Theater Frame */}
-           <div className="relative w-full aspect-video max-w-5xl bg-stone-950 overflow-hidden border border-white/10 rounded-2xl luxury-shadow group">
+           <div className={cn(
+             "relative w-full aspect-video max-w-5xl bg-stone-950 overflow-hidden luxury-shadow group",
+             isMobile ? "border-0 rounded-none" : "border border-white/10 rounded-2xl"
+           )}>
               {/* High-fidelity Google Drive Player with universal codec support directly embedded */}
               {!isVideoPlayed ? (
                 <div 
                   onClick={() => {
                     setIsVideoPlayed(true);
-                    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                      window.open("https://drive.google.com/file/d/1ZExmJpxgtOL41uDdQ3dS1VfSij-IyzH1/view?usp=drivesdk", "_blank");
-                    }
                   }}
                   className="absolute inset-0 w-full h-full z-20 cursor-pointer group/poster overflow-hidden bg-stone-950 flex items-center justify-center animate-fade-in"
                 >
@@ -745,7 +742,7 @@ export default function App() {
                      src="https://lh3.googleusercontent.com/d/1PP_dtILZBzDf_OLsPsLl-GSK1hRHYZSe=w1200" 
                      className="w-full h-full object-cover brightness-[0.55] group-hover/poster:scale-105 group-hover/poster:brightness-[0.45] transition-all duration-1000 ease-out"
                      referrerPolicy="no-referrer"
-                     alt="The Cinematic Film Thumbnail"
+                     alt="Experience the Trailer of Our Togetherness Thumbnail"
                    />
                    
                    {/* Beautiful center Play Button badge */}
@@ -761,7 +758,7 @@ export default function App() {
                      </div>
                      
                      <div className="text-center relative z-10 select-none space-y-2">
-                       <span className="text-xs md:text-sm tracking-[0.6em] font-extrabold text-luxury-gold uppercase block">PLAY CINEMATIC FILM</span>
+                       <span className="text-xs md:text-sm tracking-[0.6em] font-extrabold text-luxury-gold uppercase block">PLAY TRAILER</span>
                        <span className="text-[9px] tracking-[0.3em] font-medium text-stone-300 mt-2 block uppercase opacity-80">DURATION: 2M 30S  •  ORIGINAL AUDIO COVERAGE</span>
                      </div>
                    </div>
@@ -769,7 +766,7 @@ export default function App() {
                    {/* Subtitles / Credits Overlay at the bottom */}
                    <div className="absolute bottom-6 left-6 right-6 z-20 flex justify-between items-end border-t border-white/5 pt-4 text-[9px] tracking-[0.2em] font-mono text-stone-400">
                      <span>FILM ARCHIVE // HD STREAMING</span>
-                     <span className="text-luxury-gold font-bold">TOUFIQ & TRISHA PRESENTS</span>
+                     <span className="text-luxury-gold font-bold">TOUFIQ'S PRESENTS</span>
                    </div>
                 </div>
               ) : (
@@ -778,18 +775,16 @@ export default function App() {
                   className="w-full h-full border-0 absolute inset-0 z-10"
                   allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  title="The Cinematic Film"
+                  title="Experience the Trailer of Our Togetherness"
                 />
               )}
 
-              {/* Netflix-like continuous playback brand badge */}
-              <div className="absolute top-6 left-6 z-25 pointer-events-none flex items-center gap-3">
-                 <div className="h-2 w-2 rounded-full bg-red-600 animate-pulse" />
-                 <span className="text-[10px] tracking-[0.3em] font-bold uppercase text-stone-300">LIVE SCREENING</span>
-              </div>
+
 
               {/* Dynamic decorative cinematic overlay gradient */}
-              <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/80 to-transparent pointer-events-none z-0" />
+              {!isMobile && (
+                <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/80 to-transparent pointer-events-none z-0" />
+              )}
            </div>
         </div>
       </section>
