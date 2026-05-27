@@ -23,6 +23,29 @@ import { LuxuryPhotoCard } from "./components/LuxuryPhotoCard";
 import captionsCache from "./captions_cache.json";
 import gsap from "gsap";
 
+const SMALL_CELLS = [
+  // Row 0 - Two top heart lobes
+  { r: 0, c: 2 }, { r: 0, c: 3 }, { r: 0, c: 7 }, { r: 0, c: 8 },
+  // Row 1
+  { r: 1, c: 2 }, { r: 1, c: 3 }, { r: 1, c: 7 }, { r: 1, c: 8 },
+  // Row 2 - Widest top heart layer
+  { r: 2, c: 1 }, { r: 2, c: 2 }, { r: 2, c: 3 }, { r: 2, c: 4 }, { r: 2, c: 5 }, { r: 2, c: 6 }, { r: 2, c: 7 }, { r: 2, c: 8 }, { r: 2, c: 9 },
+  // Row 3 - Borders around center 3x3 photo
+  { r: 3, c: 1 }, { r: 3, c: 2 }, { r: 3, c: 3 }, { r: 3, c: 7 }, { r: 3, c: 8 }, { r: 3, c: 9 },
+  // Row 4 - Borders around center 3x3 photo
+  { r: 4, c: 1 }, { r: 4, c: 2 }, { r: 4, c: 3 }, { r: 4, c: 7 }, { r: 4, c: 8 }, { r: 4, c: 9 },
+  // Row 5 - Borders around center 3x3 photo
+  { r: 5, c: 2 }, { r: 5, c: 3 }, { r: 5, c: 7 }, { r: 5, c: 8 },
+  // Row 6 - Tapering downwards
+  { r: 6, c: 2 }, { r: 6, c: 3 }, { r: 6, c: 4 }, { r: 6, c: 5 }, { r: 6, c: 6 }, { r: 6, c: 7 }, { r: 6, c: 8 },
+  // Row 7
+  { r: 7, c: 3 }, { r: 7, c: 4 }, { r: 7, c: 5 }, { r: 7, c: 6 }, { r: 7, c: 7 },
+  // Row 8
+  { r: 8, c: 4 }, { r: 8, c: 5 }, { r: 8, c: 6 },
+  // Row 9 - Point layer
+  { r: 9, c: 5 }
+];
+
 const STATIC_PHOTOS = Object.entries(captionsCache).map(([id, info]: [string, any]) => ({
   id,
   name: "",
@@ -102,6 +125,7 @@ export default function App() {
             const cacheItem = (captionsCache as Record<string, { type: string; caption: string; poem?: string }>)[p.id];
             return {
               ...p,
+              type: cacheItem ? cacheItem.type : "single",
               caption: cacheItem ? cacheItem.caption : (p.name?.replace(/\.[^/.]+$/, "") || poeticCaptions[i % poeticCaptions.length]),
               poem: cacheItem ? cacheItem.poem : "In silent thoughts, the world aligns,\nListening to the quiet call.\nEach subtle pose, a work of art,\nAnd wrapped in hope's eternal rays."
             };
@@ -225,6 +249,213 @@ export default function App() {
       if (videoSection) {
         videoSection.scrollIntoView({ behavior: "smooth" });
       }
+    }
+  };
+
+  const [isDownloadingCollage, setIsDownloadingCollage] = useState(false);
+  const [downloadStatusText, setDownloadStatusText] = useState("");
+
+  const attachedPhoto = photos.find(p => p.id === "1cMkmWp8bWb8PcjF_AidtsiypCjMwW9pB" || p.id === "1riRXai4doLZehZeJaZlW5x7GgvbRAByF");
+
+  const couplePhotos = photos.filter(p => p.type === "couple" && p.id !== "1PP_dtILZBzDf_OLsPsLl-GSK1hRHYZSe");
+  
+  // Select the last 50 couple photos of the collection (which correspond to highly polished,
+  // post-2024 and recent wedding couple photos with indoor/outdoor combination).
+  const recentCouplePhotos = couplePhotos.slice(-50);
+  
+  // Found target attached photo ("A Quiet Reflection") and set it as the focal center of the 50 photos.
+  const centerPhoto = attachedPhoto 
+    || recentCouplePhotos.find(p => p.id === "1jVjBCnNAoKMsxgRM3n6-7CUwmSmnDyyh") 
+    || recentCouplePhotos[0];
+
+  // Exclude the center photo from the remaining slots to prevent duplicates
+  const surroundingPhotos = recentCouplePhotos.filter(p => p.id !== centerPhoto.id).slice(0, 49);
+  
+  const heartPhotos = [centerPhoto, ...surroundingPhotos];
+
+  const downloadHeartCollage = async () => {
+    if (isDownloadingCollage) return;
+    setIsDownloadingCollage(true);
+    setDownloadStatusText("Initializing Art Blueprint...");
+
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 2000;
+      canvas.height = 2200;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not construct 2D canvas context");
+
+      // Fill elegant dynamic radial dark gradient
+      const bgGrad = ctx.createRadialGradient(1000, 1000, 100, 1000, 1000, 1000);
+      bgGrad.addColorStop(0, "#1c1404");
+      bgGrad.addColorStop(0.3, "#0d0902");
+      bgGrad.addColorStop(1, "#050505");
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, 2000, 2200);
+
+      // Add dual-layered thin borders of gold
+      ctx.strokeStyle = "rgba(212, 175, 55, 0.25)";
+      ctx.lineWidth = 14;
+      ctx.strokeRect(25, 25, 1950, 2150);
+
+      ctx.strokeStyle = "rgba(212, 175, 55, 0.5)";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(45, 45, 1910, 2110);
+
+      setDownloadStatusText("Loading 50 Heartbeat Portraits...");
+
+      // Parallel fetch loaded pictures
+      const imgPromises = heartPhotos.map((photo) => {
+        return new Promise<HTMLImageElement | null>((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = photo.url;
+        });
+      });
+
+      const resolvedImages = await Promise.all(imgPromises);
+
+      setDownloadStatusText("Sculpting Golden Frames...");
+
+      // Grid alignments on 2000px scale
+      const COLS = 11;
+      const ROWS = 10;
+      const CELL_SIZE = 132;
+      const GAP = 12;
+
+      const totalWidth = COLS * CELL_SIZE + (COLS - 1) * GAP;
+      const startX = (2000 - totalWidth) / 2;
+      const startY = 180; // High headroom for crown look
+
+      // Dynamic golden backing-glow overlay behind heart layout
+      ctx.shadowColor = "rgba(212, 175, 55, 0.22)";
+      ctx.shadowBlur = 120;
+      ctx.fillStyle = "rgba(212, 175, 55, 0.04)";
+      ctx.beginPath();
+      ctx.arc(1000, 850, 480, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0; // reset shadow behavior
+
+      // Drawing function
+      const renderCoverCell = (img: HTMLImageElement | null, dx: number, dy: number, sizeW: number, sizeH: number, isBig: boolean) => {
+        ctx.save();
+        
+        if (isBig) {
+          ctx.shadowColor = "rgba(212, 175, 55, 0.5)";
+          ctx.shadowBlur = 40;
+        } else {
+          ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
+          ctx.shadowBlur = 12;
+        }
+
+        if (!img) {
+          ctx.fillStyle = "#1e1e21";
+          ctx.fillRect(dx, dy, sizeW, sizeH);
+        } else {
+          try {
+            const imgAspect = img.width / img.height;
+            const cardAspect = sizeW / sizeH;
+            let sx = 0, sy = 0, sw = img.width, sh = img.height;
+
+            if (imgAspect > cardAspect) {
+              sw = img.height * cardAspect;
+              sx = (img.width - sw) / 2;
+            } else {
+              sh = img.width / cardAspect;
+              sy = (img.height - sh) / 2;
+            }
+
+            ctx.drawImage(img, sx, sy, sw, sh, dx, dy, sizeW, sizeH);
+          } catch {
+            ctx.fillStyle = "#1e1e21";
+            ctx.fillRect(dx, dy, sizeW, sizeH);
+          }
+        }
+        ctx.restore();
+
+        // High gloss gold borders
+        if (isBig) {
+          ctx.strokeStyle = "#d4af37";
+          ctx.lineWidth = 6;
+          ctx.strokeRect(dx, dy, sizeW, sizeH);
+
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(dx + 5, dy + 5, sizeW - 10, sizeH - 10);
+        } else {
+          ctx.strokeStyle = "rgba(212, 175, 55, 0.45)";
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(dx, dy, sizeW, sizeH);
+
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(dx + 3, dy + 3, sizeW - 6, sizeH - 6);
+        }
+      };
+
+      // 1. Draw Center Big Image
+      const centerImg = resolvedImages[0];
+      const bigX = startX + 4 * (CELL_SIZE + GAP);
+      const bigY = startY + 3 * (CELL_SIZE + GAP);
+      const bigSize = 3 * CELL_SIZE + 2 * GAP;
+      renderCoverCell(centerImg, bigX, bigY, bigSize, bigSize, true);
+
+      // 2. Draw 49 Surrounding Images
+      SMALL_CELLS.forEach((cell, i) => {
+        const cellImg = resolvedImages[i + 1] || null;
+        const cx = startX + cell.c * (CELL_SIZE + GAP);
+        const cy = startY + cell.r * (CELL_SIZE + GAP);
+        renderCoverCell(cellImg, cx, cy, CELL_SIZE, CELL_SIZE, false);
+      });
+
+      // 3. Write "One Year of Togetherness" Calligraphy
+      setDownloadStatusText("Stylizing Gold Typography...");
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      // Text shading glow
+      ctx.shadowColor = "rgba(212, 175, 55, 0.45)";
+      ctx.shadowBlur = 20;
+
+      ctx.fillStyle = "#d4af37";
+      // Let's use standard elegant fallback serif structure
+      ctx.font = "italic 84px 'Bodoni Moda', 'Playfair Display', Georgia, serif";
+      ctx.fillText("One Year of Togetherness", 1000, 1850);
+      
+      ctx.shadowBlur = 0; // turn off shadow glow
+
+      ctx.fillStyle = "rgba(212, 175, 55, 0.85)";
+      ctx.font = "normal 600 24px 'Inter', sans-serif";
+      ctx.fillText("✦  TOUFIQ & TRISHA  ✦", 1000, 1950);
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.font = "normal 16px monospace";
+      ctx.fillText("✦  ✦  ✦", 1000, 2020);
+
+      // Finalize and download
+      setDownloadStatusText("Exporting Masterpiece...");
+      const jpegUri = canvas.toDataURL("image/jpeg", 0.95);
+      
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.download = "One_Year_of_Togetherness_Collage.jpg";
+      downloadAnchor.href = jpegUri;
+      downloadAnchor.click();
+
+      setDownloadStatusText("Masterpiece Saved!");
+      setTimeout(() => {
+        setIsDownloadingCollage(false);
+        setDownloadStatusText("");
+      }, 1500);
+
+    } catch (error) {
+      console.error(error);
+      setDownloadStatusText("Error exporting image.");
+      setTimeout(() => {
+        setIsDownloadingCollage(false);
+        setDownloadStatusText("");
+      }, 2000);
     }
   };
 
@@ -680,21 +911,114 @@ export default function App() {
         </div>
       </section>
 
-      {/* Featured Section */}
-      <section className="py-24 px-4 md:px-8 lg:px-12 overflow-hidden">
+      {/* Downloadable Heart Shape Section (50 Couple Photos Collage) */}
+      <section className="py-24 px-4 md:px-8 lg:px-12 overflow-hidden bg-black/60 relative border-t border-b border-white/5">
         <div className="w-full">
-           <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-24 max-w-7xl mx-auto">
-              <div className="max-w-md">
-                 <h2 className="font-serif text-4xl md:text-5xl italic mb-6">Fragments of Pure Light</h2>
-                 <p className="text-stone-500 font-light leading-relaxed">
-                   In the luxury of stillness, we find the most profound stories. Each frame is a love letter to the moments that define our existence. Curated with intentional grace.
-                 </p>
+           
+           <div className="relative flex flex-col items-center">
+              {/* Royal golden backing halo lighting */}
+              <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-4xl aspect-square bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.18)_0%,transparent_65%)] blur-[120px] pointer-events-none -z-10" />
+
+              {/* Heart Shape grid structure containing 50 photos */}
+              <div className="w-full max-w-4xl px-4 flex justify-center items-center">
+                 <div className="w-full relative animate-heartbeat-slow select-none">
+                    <div className="grid grid-cols-11 grid-rows-10 gap-0.5 sm:gap-1 md:gap-1.5 w-full aspect-[11/10] bg-black/40 border border-white/5 p-2 rounded-2xl shadow-2xl relative overflow-hidden">
+                        {/* Shimmer backdrop visual filter */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.01] to-transparent pointer-events-none" />
+
+                        {/* 1. Center Big 3x3 Couple Photo */}
+                        <div 
+                          onClick={() => setSelectedPhoto(heartPhotos[0])}
+                          className="relative cursor-pointer group overflow-hidden border-2 border-luxury-gold/80 hover:border-luxury-gold hover:scale-[1.01] transition-all duration-500 rounded shadow-[0_10px_35px_rgba(212,175,55,0.15)] bg-stone-900" 
+                          style={{ gridRowStart: 4, gridRowEnd: 7, gridColumnStart: 5, gridColumnEnd: 8 }}
+                        >
+                           <img 
+                             src={heartPhotos[0]?.url} 
+                             referrerPolicy="no-referrer"
+                             className="w-full h-full object-cover transition-all duration-[1.2s] group-hover:scale-105 brightness-[0.85] group-hover:brightness-100" 
+                             alt="Togetherness focal center" 
+                           />
+                           <div className="absolute inset-2 border border-white/10 pointer-events-none" />
+                           <div className="absolute inset-4 border border-luxury-gold/20 pointer-events-none group-hover:border-luxury-gold/50 transition-colors" />
+                        </div>
+
+                        {/* 2. Small 49 Grid Cells Symmetrically Arrayed around center */}
+                        {SMALL_CELLS.map((cell, idx) => {
+                          const photo = heartPhotos[idx + 1];
+                          return (
+                            <div 
+                              key={`heart-grid-${idx}`}
+                              onClick={() => photo && setSelectedPhoto(photo)}
+                              className="relative aspect-square cursor-pointer overflow-hidden border border-luxury-gold/30 hover:border-luxury-gold/70 hover:scale-[1.03] transition-all duration-500 rounded bg-[#0e0e10] group"
+                              style={{ gridRowStart: cell.r + 1, gridColumnStart: cell.c + 1 }}
+                            >
+                              {photo ? (
+                                <>
+                                  <img 
+                                    src={photo.url} 
+                                    referrerPolicy="no-referrer"
+                                    className="w-full h-full object-cover transition-all duration-[1s] group-hover:scale-110 brightness-[0.8] group-hover:brightness-100" 
+                                    alt="Heart segment portrait" 
+                                  />
+                                  <div className="absolute inset-1 border border-white/[0.05] pointer-events-none" />
+                                  <div className="absolute inset-2 border border-luxury-gold/10 group-hover:border-luxury-gold/30 pointer-events-none transition-colors" />
+                                </>
+                              ) : (
+                                <div className="w-full h-full bg-stone-900/60 border border-white/5" />
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                 <Sparkles className="w-5 h-5 text-luxury-gold animate-pulse" />
+
+              {/* Floating Download Keepsake Button */}
+              <div className="mt-10 flex flex-col items-center gap-3">
+                 <button 
+                   onClick={downloadHeartCollage}
+                   disabled={isDownloadingCollage}
+                   className="flex items-center gap-3 px-8 py-4 bg-stone-900 hover:bg-white text-luxury-gold hover:text-black border border-luxury-gold/40 hover:border-white transition-all duration-500 rounded-full text-xs font-bold tracking-[0.25em] uppercase shadow-lg group disabled:opacity-50"
+                 >
+                   {isDownloadingCollage ? (
+                     <>
+                       <div className="w-4 h-4 border-2 border-luxury-gold border-t-transparent animate-spin rounded-full" />
+                       Baking Keepsake...
+                     </>
+                   ) : (
+                     <>
+                       <Download className="w-4 h-4 animate-bounce group-hover:animate-none group-hover:scale-110 transition-transform text-luxury-gold group-hover:text-black" />
+                       Download Heart Keepsake
+                     </>
+                   )}
+                 </button>
+
+                 {isDownloadingCollage && (
+                   <p className="text-stone-400 text-[10px] font-mono tracking-widest uppercase animate-pulse">
+                     {downloadStatusText || "Processing Layout..."}
+                   </p>
+                 )}
+              </div>
+
+              {/* Majestic Headline - "One Year of Togetherness" situated after the love shape */}
+              <div className="text-center mt-12 md:mt-16 max-w-3xl px-4">
+                 <h2 className="font-serif text-5xl md:text-7xl lg:text-8xl italic text-luxury-gold tracking-[0.03em] leading-none mb-4 select-none drop-shadow-[0_4px_12px_rgba(212,175,55,0.2)]">
+                   One Year of Togetherness
+                 </h2>
+                 <div className="flex items-center justify-center gap-4 text-stone-400 font-mono text-[10px] uppercase tracking-[0.5em] select-none pl-[0.5em]">
+                    <span className="w-8 h-[1px] bg-luxury-gold/40" />
+                    ✦ Toufiq & Trisha ✦
+                    <span className="w-8 h-[1px] bg-luxury-gold/40" />
+                 </div>
               </div>
            </div>
 
+        </div>
+      </section>
+
+      {/* 242 Photos Bento & Masonry Gallery Section */}
+      <section id="gallery" className="py-24 px-4 md:px-8 lg:px-12 bg-[#050505] relative border-b border-white/5">
+        <div className="max-w-7xl mx-auto w-full">
            {/* Dynamic Bento & Masonry Mix */}
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 grid-flow-row-dense">
               {photos.map((photo, i) => (
