@@ -12,7 +12,10 @@ import {
   X,
   Sparkles,
   Search,
-  Download
+  Download,
+  Play,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { cn } from "./lib/utils";
 import { useSmoothScroll } from "./hooks/useSmoothScroll";
@@ -53,6 +56,8 @@ export default function App() {
   const [isMuted, setIsMuted] = useState(true);
   const [filmMuted, setFilmMuted] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null);
+  const [isVideoPlayed, setIsVideoPlayed] = useState(false);
+  const [isAtVideoOrPast, setIsAtVideoOrPast] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isStoryOpen, setIsStoryOpen] = useState(false);
   const [hasStoryBeenShown, setHasStoryBeenShown] = useState(false);
@@ -185,6 +190,31 @@ export default function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [hasStoryBeenShown, loadPhase]);
 
+  useEffect(() => {
+    if (loadPhase !== "COMPLETED") return;
+    const handleScrollDetection = () => {
+      const videoSection = document.getElementById("films");
+      if (videoSection) {
+        const rect = videoSection.getBoundingClientRect();
+        // Set true if the video section top is scrolled up near the viewport view
+        setIsAtVideoOrPast(rect.top <= 200);
+      }
+    };
+    window.addEventListener("scroll", handleScrollDetection, { passive: true });
+    return () => window.removeEventListener("scroll", handleScrollDetection);
+  }, [loadPhase]);
+
+  const handleArrowNavigation = () => {
+    if (isAtVideoOrPast) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const videoSection = document.getElementById("films");
+      if (videoSection) {
+        videoSection.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
   return (
     <div className="bg-luxury-black min-h-screen text-stone-100 overflow-x-hidden">
       <div className="mouse-glow" />
@@ -196,9 +226,77 @@ export default function App() {
             className="fixed inset-0 z-[100] bg-black select-none overflow-hidden flex flex-col items-center justify-center"
           >
              {/* Glowing deep background stars and message reveals behind curtains */}
-             <div className="absolute inset-0 bg-[#060606] flex items-center justify-center overflow-hidden pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08)_0%,transparent_80%)]" />
-                <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_40%,rgba(0,0,0,0.85)_100%)]" />
+             <div className="absolute inset-0 bg-[#030303] flex items-center justify-center overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.06)_0%,transparent_80%)] animate-pulse" />
+                <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_40%,rgba(0,0,0,0.9)_100%)]" />
+
+                {/* Rich Cinematic Welcome Backdrop */}
+                {loadPhase === "WELCOME" && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 1.08 }}
+                    animate={{ opacity: 0.35, scale: 1.01 }}
+                    transition={{ duration: 4.2, ease: "easeOut" }}
+                    className="absolute inset-0 w-full h-full"
+                  >
+                     {/* Breathtaking hero memory backing the welcome greeting */}
+                     <img 
+                       src="https://lh3.googleusercontent.com/d/1PP_dtILZBzDf_OLsPsLl-GSK1hRHYZSe=w1600"
+                       className="w-full h-full object-cover filter blur-[2px] brightness-[0.7] sepia-[0.25] saturate-[0.8]"
+                       referrerPolicy="no-referrer"
+                       alt="Welcome Backdrop"
+                     />
+                     {/* Soft dark and gold overlays to seamlessly merge greeting */}
+                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.12)_0%,transparent_75%)]" />
+                  </motion.div>
+                )}
+
+                {/* Drifting delicate cinematic gold hearts or sparkles that float up during welcome */}
+                {loadPhase === "WELCOME" && (
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
+                    {Array.from({ length: 24 }).map((_, i) => {
+                      const size = 10 + (i % 3) * 8; // 10, 18, 26px
+                      const duration = 6 + (i % 4) * 2; // 6, 8, 10, 12s
+                      const left = 5 + (i * 4.1) % 90; // Staggered distribution 5% to 95%
+                      const delay = (i % 6) * 0.7; // Staggered delays
+                      
+                      return (
+                        <motion.div
+                          key={`welcome-sparkle-${i}`}
+                          initial={{ opacity: 0, y: "110%", scale: 0.5, rotate: i * 15 }}
+                          animate={{ 
+                            opacity: [0, 0.45, 0.45, 0], 
+                            y: "-10%", 
+                            scale: [0.5, 1, 1, 0.8],
+                            rotate: i * 15 + 180
+                          }}
+                          transition={{
+                            duration: duration,
+                            repeat: Infinity,
+                            delay: delay,
+                            ease: "easeInOut"
+                          }}
+                          className="absolute text-luxury-gold/40 flex items-center justify-center"
+                          style={{ 
+                            left: `${left}%`,
+                            width: size,
+                            height: size 
+                          }}
+                        >
+                          {i % 2 === 0 ? (
+                            <svg className="w-full h-full fill-current" viewBox="0 0 24 24">
+                              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                          ) : (
+                            <svg className="w-full h-full fill-current" viewBox="0 0 24 24">
+                              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                            </svg>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
                 
                 {loadPhase === "WELCOME" && (
                   <motion.div 
@@ -616,16 +714,73 @@ export default function App() {
               </p>
            </div>
 
+           {/* Mobile Direct Entry Button */}
+           <div className="flex md:hidden w-full max-w-5xl justify-center mb-8 px-4">
+              <a
+                href="https://drive.google.com/file/d/1ZExmJpxgtOL41uDdQ3dS1VfSij-IyzH1/view?usp=drivesdk"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsVideoPlayed(true)}
+                className="w-full flex items-center justify-center gap-2.5 px-6 py-4 bg-luxury-gold text-luxury-black rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-white hover:text-black transition-all active:scale-95 shadow-lg shadow-luxury-gold/20"
+              >
+                 <Play className="w-3.5 h-3.5 fill-current animate-pulse" /> Stream Cinematic Film (Mobile Optimized)
+              </a>
+           </div>
+
            {/* Widescreen Theater Frame */}
            <div className="relative w-full aspect-video max-w-5xl bg-stone-950 overflow-hidden border border-white/10 rounded-2xl luxury-shadow group">
               {/* High-fidelity Google Drive Player with universal codec support directly embedded */}
-              <iframe
-                src="https://drive.google.com/file/d/1ZExmJpxgtOL41uDdQ3dS1VfSij-IyzH1/preview?autoplay=1"
-                className="w-full h-full border-0 absolute inset-0 z-10"
-                allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title="The Cinematic Film"
-              />
+              {!isVideoPlayed ? (
+                <div 
+                  onClick={() => {
+                    setIsVideoPlayed(true);
+                    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                      window.open("https://drive.google.com/file/d/1ZExmJpxgtOL41uDdQ3dS1VfSij-IyzH1/view?usp=drivesdk", "_blank");
+                    }
+                  }}
+                  className="absolute inset-0 w-full h-full z-20 cursor-pointer group/poster overflow-hidden bg-stone-950 flex items-center justify-center animate-fade-in"
+                >
+                   {/* Exquisite real photo cover with vignette style */}
+                   <img 
+                     src="https://lh3.googleusercontent.com/d/1PP_dtILZBzDf_OLsPsLl-GSK1hRHYZSe=w1200" 
+                     className="w-full h-full object-cover brightness-[0.55] group-hover/poster:scale-105 group-hover/poster:brightness-[0.45] transition-all duration-1000 ease-out"
+                     referrerPolicy="no-referrer"
+                     alt="The Cinematic Film Thumbnail"
+                   />
+                   
+                   {/* Beautiful center Play Button badge */}
+                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 space-y-6 bg-gradient-to-t from-black via-black/30 to-transparent">
+                     <div className="relative flex items-center justify-center">
+                        {/* Glowing outer aura */}
+                        <div className="absolute -inset-4 rounded-full bg-luxury-gold/20 blur-md group-hover/poster:bg-luxury-gold/40 group-hover/poster:scale-110 transition-all duration-500 animate-pulse" />
+                        
+                        {/* Elegant Golden Circle with Play icon */}
+                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border border-luxury-gold/40 bg-stone-950/80 flex items-center justify-center text-luxury-gold shadow-2xl relative z-10 group-hover/poster:border-luxury-gold group-hover/poster:scale-105 transition-all duration-500">
+                          <Play className="w-6 h-6 md:w-8 md:h-8 fill-current translate-x-0.5" />
+                        </div>
+                     </div>
+                     
+                     <div className="text-center relative z-10 select-none space-y-2">
+                       <span className="text-xs md:text-sm tracking-[0.6em] font-extrabold text-luxury-gold uppercase block">PLAY CINEMATIC FILM</span>
+                       <span className="text-[9px] tracking-[0.3em] font-medium text-stone-300 mt-2 block uppercase opacity-80">DURATION: 2M 30S  •  ORIGINAL AUDIO COVERAGE</span>
+                     </div>
+                   </div>
+
+                   {/* Subtitles / Credits Overlay at the bottom */}
+                   <div className="absolute bottom-6 left-6 right-6 z-20 flex justify-between items-end border-t border-white/5 pt-4 text-[9px] tracking-[0.2em] font-mono text-stone-400">
+                     <span>FILM ARCHIVE // HD STREAMING</span>
+                     <span className="text-luxury-gold font-bold">TOUFIQ & TRISHA PRESENTS</span>
+                   </div>
+                </div>
+              ) : (
+                <iframe
+                  src="https://drive.google.com/file/d/1ZExmJpxgtOL41uDdQ3dS1VfSij-IyzH1/preview?autoplay=1"
+                  className="w-full h-full border-0 absolute inset-0 z-10"
+                  allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="The Cinematic Film"
+                />
+              )}
 
               {/* Netflix-like continuous playback brand badge */}
               <div className="absolute top-6 left-6 z-25 pointer-events-none flex items-center gap-3">
@@ -1007,31 +1162,84 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <footer className="py-24 px-8 border-t border-white/5 bg-[#050505]">
+      <footer className="py-24 px-8 border-t border-white/5 bg-[#050505] relative">
          <div className="max-w-7xl mx-auto flex flex-col items-center gap-12">
             <div className="text-center">
                <h1 className="font-serif text-5xl italic luxury-text-gradient tracking-tighter mb-4">Toufiq & Trisha</h1>
-               <div className="flex flex-col items-center gap-4">
-                  <div className="h-[1px] w-32 bg-luxury-gold/20" />
-                  <div className="text-luxury-gold font-bold tracking-[0.8em] text-[12px] uppercase">
-                     {photos.length} Captures of Eternity
-                  </div>
-                  <div className="h-[1px] w-32 bg-luxury-gold/20" />
-               </div>
-               <p className="text-[9px] tracking-[0.4em] font-bold text-stone-700 uppercase mt-8 italic">© 2026 Editorial Archives — Toufiq & Trisha's Gallery / Love Canvas</p>
+               <p className="text-[9px] tracking-[0.4em] font-bold text-stone-700 uppercase mt-4 italic">© 2026 Toufiq & Trisha's Gallery / Love Canvas</p>
             </div>
             
             <div className="text-center flex flex-col items-center max-w-lg">
-               <p className="font-cursive text-5xl text-luxury-gold leading-none mb-6">Love without limits.</p>
+               <div className="relative group/cheer select-none mb-6">
+                  <motion.p 
+                    animate={{ 
+                      scale: [1, 1.05, 1],
+                      rotate: [0, -0.5, 0.5, 0]
+                    }}
+                    transition={{ 
+                      duration: 3, 
+                      repeat: Infinity, 
+                      ease: "easeInOut" 
+                    }}
+                    className="font-cursive text-5xl text-luxury-gold leading-none drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]"
+                  >
+                    Happy Anniversary
+                  </motion.p>
+                  {/* Floating cheer hearts rising from the text */}
+                  <div className="absolute inset-x-0 -top-8 flex justify-center gap-12 pointer-events-none h-12 overflow-hidden">
+                    {[1, 2, 3, 4].map((idx) => (
+                      <motion.div
+                        key={`cheer-heart-${idx}`}
+                        initial={{ opacity: 0, y: 30, scale: 0.5 }}
+                        animate={{ 
+                          opacity: [0, 1, 1, 0], 
+                          y: [20, -20], 
+                          scale: [0.5, 1, 0.7],
+                          rotate: [0, idx * 15 - 30] 
+                        }}
+                        transition={{
+                          duration: 2 + idx * 0.5,
+                          repeat: Infinity,
+                          delay: idx * 0.4,
+                          ease: "easeOut"
+                        }}
+                        className="text-luxury-gold/50"
+                      >
+                        <Heart className="w-3.5 h-3.5 fill-current" />
+                      </motion.div>
+                    ))}
+                  </div>
+               </div>
                <motion.div 
                  initial={{ width: 0 }}
                  whileInView={{ width: "100%" }}
                  className="h-[1.5px] bg-luxury-gold/40"
                />
-               <p className="font-serif italic text-stone-600 text-[11px] mt-6 tracking-[0.2em] uppercase">Finis • The Eternal Collection</p>
+               <p className="font-serif italic text-stone-600 text-[11px] mt-6 tracking-[0.2em] uppercase">To be continued for new collection...</p>
             </div>
          </div>
+         {/* Small photo counter on the right corner of the end side */}
+         <div className="absolute bottom-6 right-8 text-[10px] font-mono text-stone-600 tracking-wider">
+            N°{photos.length}
+         </div>
       </footer>
+
+       {/* Floating Navigation Arrow Button */}
+       {loadPhase === "COMPLETED" && (
+         <motion.button
+           initial={{ opacity: 0, scale: 0.8 }}
+           animate={{ opacity: 1, scale: 1 }}
+           onClick={handleArrowNavigation}
+           className="fixed bottom-8 right-8 z-[80] flex items-center justify-center w-12 h-12 rounded-full border border-[#d4af37]/30 bg-black/90 text-luxury-gold shadow-[0_0_20px_rgba(212,175,55,0.2)] backdrop-blur transition-all duration-300 hover:border-[#d4af37] hover:scale-110 active:scale-95 group cursor-pointer"
+           title={isAtVideoOrPast ? "Back to Home" : "Go to Cinematic Film"}
+         >
+           {isAtVideoOrPast ? (
+             <ArrowUp className="w-5 h-5 transition-transform duration-500 group-hover:-translate-y-1" />
+           ) : (
+             <ArrowDown className="w-5 h-5 transition-transform duration-500 group-hover:translate-y-1" />
+           )}
+         </motion.button>
+       )}
 
        {/* CSS for custom animations */}
        <style>{`
