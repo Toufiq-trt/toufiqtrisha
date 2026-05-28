@@ -20,6 +20,7 @@ import {
 import { cn } from "./lib/utils";
 import { useSmoothScroll } from "./hooks/useSmoothScroll";
 import { LuxuryPhotoCard } from "./components/LuxuryPhotoCard";
+import { InteractiveFeatures } from "./components/InteractiveFeatures";
 import captionsCache from "./captions_cache.json";
 import gsap from "gsap";
 
@@ -1015,6 +1016,9 @@ export default function App() {
 
         </div>
       </section>
+
+      {/* Interactive Wishes Photo Booth and Custom Heart Collage Maker */}
+      <InteractiveFeatures />
 
       {/* 242 Photos Bento & Masonry Gallery Section */}
       <section id="gallery" className="py-24 px-4 md:px-8 lg:px-12 bg-[#050505] relative border-b border-white/5">
